@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Book Reading Analytics{% endblock %}
+{% block content %}
+<main class="app">
+  <nav class="tabs" aria-label="Application sections">
+    <button class="tab active" type="button" data-tab="books">Books</button>
+    <button class="tab" type="button" data-tab="sessions">Sessions</button>
+    <button class="tab" type="button" data-tab="analytics">Analytics</button>
+    <button class="tab" type="button" data-tab="goals">Goals &amp; Recommendations</button>
+  </nav>
+
+  <section class="panel active" id="panel-books">
+    <fieldset>
+      <legend>Add / edit a book</legend>
+      <form id="book-form">
+        <input id="b-id" type="hidden">
+        <div class="book-editor-grid">
+          <div class="cover-editor">
+            <div class="cover-preview-shell">
+              <img id="b-cover-preview" class="cover-preview" alt="Book cover preview" hidden>
+              <div id="b-cover-placeholder" class="cover-placeholder">No cover</div>
+            </div>
+          </div>
+
+          <div class="book-fields">
+            <div class="row">
+              <div class="field grow">
+                <label for="b-title">Title</label>
+                <input id="b-title" placeholder="e.g. Dune" required autocomplete="off">
+                <small>After you pause typing, the app will look for likely covers.</small>
+              </div>
+              <div class="field grow">
+                <label for="b-genre">Genre</label>
+                <input id="b-genre" list="genre-options" placeholder="Suggested automatically — editable" autocomplete="off" required>
+                <small>Suggested from Open Library subjects when a title is found; you can change it.</small>
+              </div>
+              <datalist id="genre-options"></datalist>
+              <div class="field">
+                <label for="b-pages">Pages</label>
+                <input id="b-pages" type="number" min="1" step="1" required>
+              </div>
+            </div>
+
+            <div class="cover-url-row">
+              <div class="field grow">
+                <label for="b-cover-url">Cover image URL <small>(editable)</small></label>
+                <input id="b-cover-url" type="url" placeholder="https://...">
+              </div>
+              <button class="secondary" id="find-cover" type="button">Find cover</button>
+              <button class="secondary" id="remove-cover" type="button">Remove cover</button>
+            </div>
+
+            <div id="cover-search-status" class="cover-search-status"></div>
+            <div id="cover-results" class="cover-results" aria-live="polite"></div>
+
+            <div class="book-form-actions">
+              <button type="submit" id="book-save">Add book</button>
+              <button class="secondary" id="book-clear" type="button">Clear</button>
+            </div>
+          </div>
+        </div>
+      </form>
+      <div class="field-error" id="b-error"></div>
+    </fieldset>
+
+    <div class="table-wrap">
+      <table class="books-table">
+        <thead><tr><th>Cover</th><th>Title</th><th>Genre</th><th>Progress</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="books-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-sessions">
+    <fieldset>
+      <legend>Log a reading session</legend>
+      <form id="session-form">
+        <div class="row">
+          <div class="field grow"><label for="s-book">Book</label><select id="s-book" required></select></div>
+          <div class="field"><label for="s-date">Date</label><input id="s-date" type="date" required></div>
+          <div class="field"><label for="s-duration">Duration (min)</label><input id="s-duration" type="number" min="1" step="1" required></div>
+          <div class="field"><label for="s-pages">Pages read</label><input id="s-pages" type="number" min="1" step="1" required></div>
+          <button type="submit">Add session</button>
+        </div>
+      </form>
+      <div class="field-error" id="s-error"></div>
+    </fieldset>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Book</th><th>Date</th><th>Duration</th><th>Pages read</th><th>Actions</th></tr></thead>
+        <tbody id="sessions-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-analytics">
+    <div class="stats-grid analytics-stats">
+      <div class="metric-card"><span>Total reading time</span><strong id="total-time-stat">—</strong><small id="total-pages-stat">— pages total</small></div>
+      <div class="metric-card"><span>Last 7 days</span><strong id="last-seven-stat">—</strong><small id="weekly-change-stat">—</small></div>
+      <div class="metric-card"><span>Pages in last 7 days</span><strong id="last-seven-pages-stat">—</strong><small>Based on logged sessions</small></div>
+      <div class="metric-card"><span>Active days (30 days)</span><strong id="active-days-stat">—</strong><small id="active-day-average">—</small></div>
+      <div class="metric-card"><span>Books completed</span><strong id="completed-stat">—</strong><small id="library-total-stat">— in library</small></div>
+      <div class="metric-card"><span>Books currently reading</span><strong id="reading-stat">—</strong><small>Progress shown on Books tab</small></div>
+    </div>
+
+    <fieldset class="speed-box">
+      <legend>Reading speed — all books</legend>
+      <p class="analytics-help">Calculated automatically from the pages and minutes recorded in every reading session.</p>
+      <div id="book-speed-list" class="speed-list"></div>
+    </fieldset>
+
+    <div class="analytics-heading-row speed-heading-row">
+      <div>
+        <h4>Reading speed by genre</h4>
+        <p class="analytics-help">This is the strongest signal used by personalised recommendations.</p>
+      </div>
+    </div>
+    <div class="chart genre-speed-chart" id="genre-speed-chart"></div>
+
+    <div class="analytics-heading-row">
+      <div>
+        <h4>Reading dynamics</h4>
+        <p class="analytics-help">Continuous periods include days/weeks/months with no reading, so changes are visible accurately.</p>
+      </div>
+      <div class="analytics-controls">
+        <div class="toggle compact-toggle" aria-label="Trend period">
+          <button id="trend-daily" type="button">Daily · 30d</button>
+          <button id="trend-weekly" class="active" type="button">Weekly · 12w</button>
+          <button id="trend-monthly" type="button">Monthly · 12m</button>
+        </div>
+        <div class="toggle compact-toggle" aria-label="Trend metric">
+          <button id="metric-minutes" class="active" type="button">Minutes</button>
+          <button id="metric-pages" type="button">Pages</button>
+        </div>
+      </div>
+    </div>
+    <div class="line-chart-card">
+      <div id="trend-line-chart" class="line-chart" role="img" aria-label="Reading activity trend"></div>
+      <div id="trend-summary" class="trend-summary"></div>
+    </div>
+
+    <h4>Genre distribution (books per genre)</h4>
+    <div class="chart genre-chart" id="genre-chart"></div>
+  </section>
+
+  <section class="panel" id="panel-goals">
+    <fieldset>
+      <legend>Set a reading goal</legend>
+      <form id="goal-form">
+        <div class="row">
+          <div class="field"><label for="g-target">Target books</label><input id="g-target" type="number" min="1" step="1" required></div>
+          <div class="field"><label for="g-start">Start date</label><input id="g-start" type="date" required></div>
+          <div class="field"><label for="g-end">End date</label><input id="g-end" type="date" required></div>
+          <button type="submit">Set goal</button>
+        </div>
+      </form>
+      <div class="field-error" id="g-error"></div>
+    </fieldset>
+
+    <h4>Progress &amp; prediction</h4>
+    <div id="goal-progress-text" class="stat">No goal set yet.</div>
+    <div class="progress-outer"><div class="progress-inner" id="goal-progress-bar" style="width:0%"></div></div>
+    <div id="goal-status" class="status"></div>
+
+    <div class="recommendation-heading">
+      <h4>Personalised recommendations</h4>
+      <button class="secondary small-button" id="refresh-recommendations" type="button">Refresh</button>
+    </div>
+    <div class="rec-box" id="rec-box">
+      <div class="empty">Log reading sessions to generate recommendations.</div>
+    </div>
+    <div class="note">
+      Recommendations are ranked mainly by how quickly you read each genre: 70% reading speed, 20% reading-time share and 10% completed books. Books already in your library are excluded. Use “Add to reading list” to save a recommendation directly.
+    </div>
+  </section>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+{% endblock %}

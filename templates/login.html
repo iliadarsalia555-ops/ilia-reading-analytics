@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Login — Book Reading Analytics{% endblock %}
+{% block content %}
+<main class="auth-shell">
+  <section class="auth-card">
+    <div class="auth-heading">
+      <h1>Welcome back</h1>
+      <p>Log in to view your books, reading progress, analytics and recommendations.</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="inline-alert {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="post" class="auth-form">
+      <div class="field full">
+        <label for="identity">Username or email</label>
+        <input id="identity" name="identity" required autocomplete="username" autofocus>
+      </div>
+      <div class="field full">
+        <div class="password-label-row">
+          <label for="password">Password</label>
+          <a class="forgot-link" href="{{ url_for('auth.forgot_password') }}">Forgot password?</a>
+        </div>
+        <input id="password" name="password" type="password" required autocomplete="current-password">
+      </div>
+      <button class="full-button" type="submit">Log in</button>
+    </form>
+    <p class="auth-switch">No account yet? <a href="{{ url_for('auth.register') }}">Create one</a></p>
+  </section>
+</main>
+{% endblock %}

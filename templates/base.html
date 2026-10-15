@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Book Reading Analytics{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="accent-bar"></div>
+<header class="titlebar">
+  <a class="brand" href="{{ url_for('index') }}">
+    <span class="mark">R</span>
+    <span class="name">Book Reading Analytics</span>
+  </a>
+  {% if session.get('user_id') %}
+  <div class="account-area">
+    <span class="sub">Signed in as <strong>{{ session.get('username') }}</strong></span>
+    <form method="post" action="{{ url_for('auth.logout') }}">
+      <button class="secondary compact" type="submit">Log out</button>
+    </form>
+  </div>
+  {% else %}
+    <span class="sub">Personal reading tracker</span>
+  {% endif %}
+</header>
+
+{% block content %}{% endblock %}
+
+<div id="toast-stack"></div>
+<div id="modal-overlay" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-message">
+    <p id="modal-message"></p>
+    <div class="modal-actions">
+      <button class="secondary" type="button" id="modal-cancel-btn">Cancel</button>
+      <button class="danger" type="button" id="modal-confirm-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

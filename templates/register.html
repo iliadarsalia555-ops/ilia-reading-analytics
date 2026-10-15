@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Register — Book Reading Analytics{% endblock %}
+{% block content %}
+<main class="auth-shell">
+  <section class="auth-card">
+    <div class="auth-heading">
+      <h1>Create account</h1>
+      <p>Your books, sessions, goals and analytics will be stored separately from other users.</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="inline-alert {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="post" class="auth-form">
+      <div class="field full">
+        <label for="username">Username</label>
+        <input id="username" name="username" minlength="3" maxlength="40" required autocomplete="username">
+      </div>
+      <div class="field full">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" maxlength="120" required autocomplete="email">
+      </div>
+      <div class="field full">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" minlength="8" required autocomplete="new-password">
+        <small>Minimum 8 characters.</small>
+      </div>
+      <button class="full-button" type="submit">Create account</button>
+    </form>
+    <p class="auth-switch">Already registered? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+  </section>
+</main>
+{% endblock %}
